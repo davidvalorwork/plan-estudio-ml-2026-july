@@ -36,11 +36,8 @@ yarn-error.log*
 # vercel
 .vercel
 
-# progreso local (SQLite) — no se versiona
-/data/*.db
-/data/*.db-journal
-/data/*.db-shm
-/data/*.db-wal
+# datos locales viejos (ya no se usan — el progreso ahora vive en localStorage)
+/data/
 
 # typescript
 *.tsbuildinfo

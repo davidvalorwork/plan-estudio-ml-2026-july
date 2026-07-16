@@ -7,7 +7,7 @@ import { en } from "@/lib/content/en";
 import { characterFor } from "@/lib/content/characters";
 import { makeStatusLookup, type Status } from "@/lib/progress-status";
 import { SpeakButton } from "@/components/SpeakButton";
-import type { ConceptProgressRow } from "@/lib/db";
+import { getAllProgress, type ConceptProgressRow } from "@/lib/db";
 
 const STATUS_LABEL: Record<Status, string> = {
   "not-started": "sin empezar",
@@ -30,9 +30,7 @@ export default function FasePage({ params }: { params: Promise<{ id: string }> }
   const [lang, setLang] = useState<Lang>("es");
 
   useEffect(() => {
-    fetch("/api/progress")
-      .then((r) => r.json())
-      .then((d) => setProgress(d.progress));
+    setProgress(getAllProgress());
   }, []);
 
   if (!phase) return <p>Fase no encontrada.</p>;

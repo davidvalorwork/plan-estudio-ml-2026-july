@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getPhase } from "@/lib/content/phases";
 import { characterFor } from "@/lib/content/characters";
 import { quizFor, type QuizQuestion } from "@/lib/content/quizzes";
+import { upsertReview, awardXpForReview } from "@/lib/db";
 
 type Stage = "study" | "question" | "answered";
 
@@ -48,22 +49,20 @@ export default function QuizPage({ params }: { params: Promise<{ phaseId: string
 
   if (!phase) return <p>Fase no encontrada.</p>;
 
-  async function selectOption(optionIndex: number) {
+  function selectOption(optionIndex: number) {
     if (selected !== null || !question || !current) return;
     setSelected(optionIndex);
     setStage("answered");
     const correct = optionIndex === question.correctIndex;
 
-    const res = await fetch("/api/quiz", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conceptId: current.id, remembered: correct }),
-    });
-    const data = await res.json();
-    if (correct) setXpGained((x) => x + 10 + (data.reachedMastered ? 50 : 0));
+    const row = upsertReview(current.id, correct);
+    const reachedMastered = correct && row.stage === 5;
+    awardXpForReview(correct, reachedMastered);
+
+    if (correct) setXpGained((x) => x + 10 + (reachedMastered ? 50 : 0));
     setFeedback(
       correct
-        ? data.reachedMastered
+        ? reachedMastered
           ? "¡Correcto! Concepto dominado. +60 XP"
           : "¡Correcto! +10 XP"
         : `No era esa — la respuesta correcta era: "${question.options[question.correctIndex]}"`

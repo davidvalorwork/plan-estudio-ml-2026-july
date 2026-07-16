@@ -5,7 +5,7 @@ import Link from "next/link";
 import { phases, allConcepts } from "@/lib/content/phases";
 import { makeStatusLookup } from "@/lib/progress-status";
 import { ProgressBar } from "@/components/ProgressBar";
-import type { ConceptProgressRow } from "@/lib/db";
+import { getAllProgress, getUserStats, type ConceptProgressRow } from "@/lib/db";
 
 type ApiResponse = {
   progress: ConceptProgressRow[];
@@ -16,9 +16,7 @@ export default function Dashboard() {
   const [data, setData] = useState<ApiResponse | null>(null);
 
   useEffect(() => {
-    fetch("/api/progress")
-      .then((r) => r.json())
-      .then(setData);
+    setData({ progress: getAllProgress(), stats: getUserStats() });
   }, []);
 
   if (!data) return <p className="text-neutral-400">Cargando progreso…</p>;
