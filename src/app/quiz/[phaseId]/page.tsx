@@ -9,6 +9,7 @@ import { upsertReview, awardXpForReview } from "@/lib/db";
 import { useLanguage } from "@/lib/language";
 import { UI } from "@/lib/ui-strings";
 import { localizedConcept, localizedPhaseTitle, localizedScene, localizedQuiz } from "@/lib/content/localized";
+import { initials } from "@/lib/text";
 
 type Stage = "study" | "question" | "answered";
 
@@ -118,6 +119,9 @@ export default function QuizPage({ params }: { params: Promise<{ phaseId: string
         {stage === "study" && localized && current && (
           <div className="space-y-4">
             <p className="text-neutral-300">{localized.lesson}</p>
+            {lang === "en" && (
+              <p className="text-xs text-neutral-500 font-mono tracking-wide">{initials(localized.lesson)}</p>
+            )}
             <p className="text-sm text-sky-300/90 border-l-2 border-sky-800 pl-3">
               {t.example}: {localized.example}
             </p>

@@ -11,6 +11,7 @@ import { getAllProgress, type ConceptProgressRow } from "@/lib/db";
 import { useLanguage } from "@/lib/language";
 import { UI } from "@/lib/ui-strings";
 import { localizedConcept, localizedPhaseTitle, localizedPhaseSynthesis, localizedScene } from "@/lib/content/localized";
+import { initials } from "@/lib/text";
 
 export default function FasePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -92,6 +93,9 @@ export default function FasePage({ params }: { params: Promise<{ id: string }> }
                 </summary>
                 <div className="mt-2 space-y-2 pl-1">
                   <p className="text-sm text-neutral-300">{localized.lesson}</p>
+                  {lang === "en" && (
+                    <p className="text-xs text-neutral-500 font-mono tracking-wide">{initials(localized.lesson)}</p>
+                  )}
                   <p className="text-sm text-sky-300/90 border-l-2 border-sky-800 pl-2">
                     {t.example}: {localized.example}
                   </p>
