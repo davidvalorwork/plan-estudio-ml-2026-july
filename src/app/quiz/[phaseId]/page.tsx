@@ -8,8 +8,23 @@ import { quizFor, type QuizQuestion } from "@/lib/content/quizzes";
 
 type Stage = "study" | "question" | "answered";
 
+function shuffle<T>(items: T[]): T[] {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function pickQuestion(questions: QuizQuestion[]): QuizQuestion {
-  return questions[Math.floor(Math.random() * questions.length)];
+  const base = questions[Math.floor(Math.random() * questions.length)];
+  const order = shuffle(base.options.map((_, i) => i));
+  return {
+    question: base.question,
+    options: order.map((i) => base.options[i]),
+    correctIndex: order.indexOf(base.correctIndex),
+  };
 }
 
 export default function QuizPage({ params }: { params: Promise<{ phaseId: string }> }) {
