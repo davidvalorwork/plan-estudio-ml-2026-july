@@ -6,6 +6,9 @@ import { phases, allConcepts } from "@/lib/content/phases";
 import { makeStatusLookup } from "@/lib/progress-status";
 import { ProgressBar } from "@/components/ProgressBar";
 import { getAllProgress, getUserStats, type ConceptProgressRow } from "@/lib/db";
+import { useLanguage } from "@/lib/language";
+import { UI } from "@/lib/ui-strings";
+import { localizedPhaseTitle } from "@/lib/content/localized";
 
 type ApiResponse = {
   progress: ConceptProgressRow[];
@@ -13,13 +16,15 @@ type ApiResponse = {
 };
 
 export default function Dashboard() {
+  const { lang } = useLanguage();
+  const t = UI[lang];
   const [data, setData] = useState<ApiResponse | null>(null);
 
   useEffect(() => {
     setData({ progress: getAllProgress(), stats: getUserStats() });
   }, []);
 
-  if (!data) return <p className="text-neutral-400">Cargando progreso…</p>;
+  if (!data) return <p className="text-neutral-400">{t.loadingProgress}</p>;
 
   const statusFor = makeStatusLookup(data.progress);
   const total = allConcepts().length;
@@ -32,24 +37,22 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Stat label="Nivel" value={data.stats.level} />
-        <Stat label="XP" value={data.stats.xp} />
-        <Stat label="Racha (días)" value={data.stats.streak_days} />
-        <Stat label="Repaso hoy" value={dueToday} accent={dueToday > 0} />
+        <Stat label={t.level} value={data.stats.level} />
+        <Stat label={t.xp} value={data.stats.xp} />
+        <Stat label={t.streakDays} value={data.stats.streak_days} />
+        <Stat label={t.dueToday} value={dueToday} accent={dueToday > 0} />
       </section>
 
       <section>
         <div className="flex items-baseline justify-between mb-2">
-          <h2 className="text-lg font-semibold">Progreso general</h2>
-          <span className="text-sm text-neutral-400">
-            {masteredTotal}/{total} conceptos dominados
-          </span>
+          <h2 className="text-lg font-semibold">{t.overallProgress}</h2>
+          <span className="text-sm text-neutral-400">{t.conceptsMastered(masteredTotal, total)}</span>
         </div>
         <ProgressBar pct={(masteredTotal / total) * 100} />
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Fases</h2>
+        <h2 className="text-lg font-semibold">{t.phases}</h2>
         <div className="grid gap-3">
           {phases.map((phase) => {
             const cIds = phase.concepts.map((c) => c.id);
@@ -58,26 +61,33 @@ export default function Dashboard() {
             return (
               <div
                 key={phase.id}
-                className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 flex flex-col gap-2"
+                className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 flex flex-col gap-3"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">
-                    Fase {phase.order} — {phase.title}
-                  </span>
+                  <span className="font-medium">{t.phaseLabel(phase.order, localizedPhaseTitle(phase, lang))}</span>
                   <span className="text-xs text-neutral-400">
                     {phaseMastered}/{cIds.length}
                   </span>
                 </div>
                 <ProgressBar pct={phasePct} />
-                <div className="flex gap-3 text-sm mt-1">
-                  <Link href={`/fase/${phase.id}`} className="text-emerald-400 hover:underline">
-                    Ver fase
+                <div className="flex flex-wrap gap-2 mt-1">
+                  <Link
+                    href={`/fase/${phase.id}`}
+                    className="rounded-lg border border-emerald-700 text-emerald-300 px-4 py-2.5 text-sm font-medium text-center hover:bg-emerald-950/40"
+                  >
+                    {t.viewPhase}
                   </Link>
-                  <Link href={`/flashcards/${phase.id}`} className="text-fuchsia-400 hover:underline">
-                    Tarjetas
+                  <Link
+                    href={`/flashcards/${phase.id}`}
+                    className="rounded-lg border border-fuchsia-700 text-fuchsia-300 px-4 py-2.5 text-sm font-medium text-center hover:bg-fuchsia-950/40"
+                  >
+                    {t.flashcardsLink}
                   </Link>
-                  <Link href={`/quiz/${phase.id}`} className="text-amber-400 hover:underline">
-                    Quiz
+                  <Link
+                    href={`/quiz/${phase.id}`}
+                    className="rounded-lg border border-amber-700 text-amber-300 px-4 py-2.5 text-sm font-medium text-center hover:bg-amber-950/40"
+                  >
+                    {t.quizLink}
                   </Link>
                 </div>
               </div>

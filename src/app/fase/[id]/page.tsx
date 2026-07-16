@@ -8,85 +8,69 @@ import { characterFor } from "@/lib/content/characters";
 import { makeStatusLookup, type Status } from "@/lib/progress-status";
 import { SpeakButton } from "@/components/SpeakButton";
 import { getAllProgress, type ConceptProgressRow } from "@/lib/db";
-
-const STATUS_LABEL: Record<Status, string> = {
-  "not-started": "sin empezar",
-  learning: "en progreso",
-  mastered: "dominado",
-};
-
-const STATUS_COLOR: Record<Status, string> = {
-  "not-started": "text-neutral-500",
-  learning: "text-amber-400",
-  mastered: "text-emerald-400",
-};
-
-type Lang = "es" | "en";
+import { useLanguage } from "@/lib/language";
+import { UI } from "@/lib/ui-strings";
+import { localizedConcept, localizedPhaseTitle, localizedPhaseSynthesis, localizedScene } from "@/lib/content/localized";
 
 export default function FasePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const phase = getPhase(id);
+  const { lang } = useLanguage();
+  const t = UI[lang];
   const [progress, setProgress] = useState<ConceptProgressRow[]>([]);
-  const [lang, setLang] = useState<Lang>("es");
 
   useEffect(() => {
     setProgress(getAllProgress());
   }, []);
 
-  if (!phase) return <p>Fase no encontrada.</p>;
+  if (!phase) return <p>{t.phaseNotFound}</p>;
 
   const statusFor = makeStatusLookup(progress);
+
+  const STATUS_LABEL: Record<Status, string> = {
+    "not-started": t.statusNotStarted,
+    learning: t.statusLearning,
+    mastered: t.statusMastered,
+  };
+
+  const STATUS_COLOR: Record<Status, string> = {
+    "not-started": "text-neutral-500",
+    learning: "text-amber-400",
+    mastered: "text-emerald-400",
+  };
 
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">
-            Fase {phase.order} — {phase.title}
-          </h1>
-          <div className="flex gap-1 rounded-full border border-neutral-700 p-0.5">
-            <button
-              onClick={() => setLang("es")}
-              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                lang === "es" ? "bg-neutral-100 text-neutral-900" : "text-neutral-400"
-              }`}
-            >
-              Español
-            </button>
-            <button
-              onClick={() => setLang("en")}
-              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                lang === "en" ? "bg-neutral-100 text-neutral-900" : "text-neutral-400"
-              }`}
-            >
-              English
-            </button>
-          </div>
-        </div>
-        <div className="flex gap-4 mt-2 text-sm">
-          <Link href={`/flashcards/${phase.id}`} className="text-fuchsia-400 hover:underline">
-            Ir a las tarjetas →
+        <h1 className="text-2xl font-bold">{t.phaseLabel(phase.order, localizedPhaseTitle(phase, lang))}</h1>
+        <div className="flex flex-wrap gap-2 mt-3 text-sm">
+          <Link
+            href={`/flashcards/${phase.id}`}
+            className="rounded-lg border border-fuchsia-700 text-fuchsia-300 px-4 py-2.5 font-medium hover:bg-fuchsia-950/40"
+          >
+            {t.goToFlashcards}
           </Link>
-          <Link href={`/quiz/${phase.id}`} className="text-amber-400 hover:underline">
-            Ir al quiz →
+          <Link
+            href={`/quiz/${phase.id}`}
+            className="rounded-lg border border-amber-700 text-amber-300 px-4 py-2.5 font-medium hover:bg-amber-950/40"
+          >
+            {t.goToQuiz}
           </Link>
         </div>
       </div>
 
       <details className="group rounded-lg border border-violet-900 bg-violet-950/30 p-3" open>
-        <summary className="cursor-pointer font-medium text-violet-300 select-none">
-          🧩 Cómo funciona todo mezclado (síntesis de la fase)
+        <summary className="cursor-pointer font-medium text-violet-300 select-none py-1">
+          {t.synthesisTitle}
         </summary>
-        <p className="text-sm text-neutral-300 mt-2">{phase.synthesis}</p>
+        <p className="text-sm text-neutral-300 mt-2">{localizedPhaseSynthesis(phase, lang)}</p>
       </details>
 
       <div className="grid gap-2">
         {phase.concepts.map((c) => {
           const status = statusFor(c.id);
+          const localized = localizedConcept(c, lang);
           const enC = en[c.id];
-          const displayName = lang === "en" && enC ? enC.name : c.name;
-          const displayLesson = lang === "en" && enC ? enC.lesson : c.lesson;
-          const displayExample = lang === "en" && enC ? enC.example : c.example;
           const speakText = enC ? `${enC.name}. ${enC.lesson}` : c.name;
           const character = characterFor(c.id);
 
@@ -95,7 +79,7 @@ export default function FasePage({ params }: { params: Promise<{ id: string }> }
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <SpeakButton text={speakText} />
-                  <div className="font-medium">{displayName}</div>
+                  <div className="font-medium">{localized.name}</div>
                 </div>
                 <span className={`text-xs font-semibold shrink-0 ${STATUS_COLOR[status]}`}>
                   {STATUS_LABEL[status]}
@@ -103,38 +87,40 @@ export default function FasePage({ params }: { params: Promise<{ id: string }> }
               </div>
 
               <details className="group mt-2">
-                <summary className="cursor-pointer text-sm text-neutral-300 select-none hover:text-neutral-100">
-                  📖 Concepto + ejemplo
+                <summary className="cursor-pointer text-sm text-neutral-300 select-none hover:text-neutral-100 py-2">
+                  {t.conceptAndExample}
                 </summary>
                 <div className="mt-2 space-y-2 pl-1">
-                  <p className="text-sm text-neutral-300">{displayLesson}</p>
+                  <p className="text-sm text-neutral-300">{localized.lesson}</p>
                   <p className="text-sm text-sky-300/90 border-l-2 border-sky-800 pl-2">
-                    {lang === "en" ? "Example" : "Ejemplo"}: {displayExample}
+                    {t.example}: {localized.example}
                   </p>
                 </div>
               </details>
 
               <details className="group mt-2">
-                <summary className="cursor-pointer text-sm text-neutral-300 select-none hover:text-neutral-100">
-                  🔗 Cómo se relaciona con otros conceptos
+                <summary className="cursor-pointer text-sm text-neutral-300 select-none hover:text-neutral-100 py-2">
+                  {t.relationTitle}
                 </summary>
                 <p className="mt-2 text-sm text-emerald-300/90 border-l-2 border-emerald-800 pl-2">
-                  {c.relation}
+                  {localized.relation}
                 </p>
               </details>
 
               {character && (
                 <details className="group mt-2">
-                  <summary className="cursor-pointer text-sm text-neutral-300 select-none hover:text-neutral-100">
-                    🎭 Asociación personaje-acción ({character.franchise})
+                  <summary className="cursor-pointer text-sm text-neutral-300 select-none hover:text-neutral-100 py-2">
+                    {t.characterTitle(character.franchise)}
                   </summary>
                   <p className="mt-2 text-sm text-fuchsia-300/90 border-l-2 border-fuchsia-800 pl-2">
-                    <strong>{character.character}</strong> — {character.scene}
+                    <strong>{character.character}</strong> — {localizedScene(c.id, character.scene, lang)}
                   </p>
                 </details>
               )}
 
-              <p className="text-xs text-neutral-500 mt-3 italic">Quiz: {c.prompt}</p>
+              <p className="text-xs text-neutral-500 mt-3 italic">
+                {t.quizLabel}: {localized.prompt}
+              </p>
             </div>
           );
         })}

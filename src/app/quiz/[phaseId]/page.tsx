@@ -4,8 +4,11 @@ import { useState, use, useMemo } from "react";
 import Link from "next/link";
 import { getPhase } from "@/lib/content/phases";
 import { characterFor } from "@/lib/content/characters";
-import { quizFor, type QuizQuestion } from "@/lib/content/quizzes";
+import { type QuizQuestion } from "@/lib/content/quizzes";
 import { upsertReview, awardXpForReview } from "@/lib/db";
+import { useLanguage } from "@/lib/language";
+import { UI } from "@/lib/ui-strings";
+import { localizedConcept, localizedPhaseTitle, localizedScene, localizedQuiz } from "@/lib/content/localized";
 
 type Stage = "study" | "question" | "answered";
 
@@ -31,6 +34,8 @@ function pickQuestion(questions: QuizQuestion[]): QuizQuestion {
 export default function QuizPage({ params }: { params: Promise<{ phaseId: string }> }) {
   const { phaseId } = use(params);
   const phase = getPhase(phaseId);
+  const { lang } = useLanguage();
+  const t = UI[lang];
   const [index, setIndex] = useState(0);
   const [stage, setStage] = useState<Stage>("study");
   const [done, setDone] = useState(false);
@@ -40,14 +45,15 @@ export default function QuizPage({ params }: { params: Promise<{ phaseId: string
 
   const concepts = phase?.concepts ?? [];
   const current = concepts[index];
-  const character = characterFor(current?.id);
+  const character = current ? characterFor(current.id) : undefined;
+  const localized = current ? localizedConcept(current, lang) : undefined;
   const question = useMemo(
-    () => (current ? pickQuestion(quizFor(current.id)) : null),
+    () => (current ? pickQuestion(localizedQuiz(current.id, lang)) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [current?.id]
+    [current?.id, lang]
   );
 
-  if (!phase) return <p>Fase no encontrada.</p>;
+  if (!phase) return <p>{t.phaseNotFound}</p>;
 
   function selectOption(optionIndex: number) {
     if (selected !== null || !question || !current) return;
@@ -63,9 +69,9 @@ export default function QuizPage({ params }: { params: Promise<{ phaseId: string
     setFeedback(
       correct
         ? reachedMastered
-          ? "¡Correcto! Concepto dominado. +60 XP"
-          : "¡Correcto! +10 XP"
-        : `No era esa — la respuesta correcta era: "${question.options[question.correctIndex]}"`
+          ? t.correctMastered(gained)
+          : t.correctPlain(gained)
+        : t.incorrect(question.options[question.correctIndex])
     );
   }
 
@@ -83,10 +89,10 @@ export default function QuizPage({ params }: { params: Promise<{ phaseId: string
   if (done) {
     return (
       <div className="space-y-4 text-center py-16">
-        <h1 className="text-2xl font-bold">Quiz completo 🎉</h1>
-        <p className="text-neutral-400">Ganaste {xpGained} XP en esta ronda.</p>
+        <h1 className="text-2xl font-bold">{t.quizComplete}</h1>
+        <p className="text-neutral-400">{t.xpEarned(xpGained)}</p>
         <Link href="/" className="text-emerald-400 hover:underline">
-          Volver al dashboard
+          {t.backToDashboard}
         </Link>
       </div>
     );
@@ -95,9 +101,7 @@ export default function QuizPage({ params }: { params: Promise<{ phaseId: string
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <div className="flex items-center justify-between text-sm text-neutral-400">
-        <span>
-          Fase {phase.order} — {phase.title}
-        </span>
+        <span>{t.phaseLabel(phase.order, localizedPhaseTitle(phase, lang))}</span>
         <span>
           {index + 1}/{concepts.length}
         </span>
@@ -109,24 +113,24 @@ export default function QuizPage({ params }: { params: Promise<{ phaseId: string
             {character.franchise}: {character.character}
           </div>
         )}
-        <h2 className="text-xl font-semibold">{current.name}</h2>
+        <h2 className="text-xl font-semibold">{localized?.name}</h2>
 
-        {stage === "study" && (
+        {stage === "study" && localized && current && (
           <div className="space-y-4">
-            <p className="text-neutral-300">{current.lesson}</p>
+            <p className="text-neutral-300">{localized.lesson}</p>
             <p className="text-sm text-sky-300/90 border-l-2 border-sky-800 pl-3">
-              Ejemplo: {current.example}
+              {t.example}: {localized.example}
             </p>
             {character && (
               <p className="text-sm text-fuchsia-300/90 border-l-2 border-fuchsia-800 pl-3">
-                {character.scene}
+                {localizedScene(current.id, character.scene, lang)}
               </p>
             )}
             <button
               onClick={() => setStage("question")}
-              className="w-full rounded-lg bg-neutral-100 text-neutral-900 py-2 font-medium hover:bg-white"
+              className="w-full rounded-lg bg-neutral-100 text-neutral-900 py-3 text-base font-medium hover:bg-white"
             >
-              Ya la leí — quiero el quiz
+              {t.readyForQuiz}
             </button>
           </div>
         )}
@@ -149,7 +153,7 @@ export default function QuizPage({ params }: { params: Promise<{ phaseId: string
                     key={i}
                     onClick={() => selectOption(i)}
                     disabled={selected !== null}
-                    className={`text-left rounded-lg border px-4 py-2 text-sm transition-colors ${style}`}
+                    className={`text-left rounded-lg border px-5 py-4 text-base transition-colors ${style}`}
                   >
                     {opt}
                   </button>
@@ -160,9 +164,9 @@ export default function QuizPage({ params }: { params: Promise<{ phaseId: string
             {stage === "answered" && (
               <button
                 onClick={next}
-                className="w-full rounded-lg bg-neutral-100 text-neutral-900 py-2 font-medium hover:bg-white"
+                className="w-full rounded-lg bg-neutral-100 text-neutral-900 py-3 text-base font-medium hover:bg-white"
               >
-                Siguiente
+                {t.next}
               </button>
             )}
           </div>
