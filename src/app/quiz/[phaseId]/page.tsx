@@ -55,11 +55,11 @@ export default function QuizPage({ params }: { params: Promise<{ phaseId: string
     setStage("answered");
     const correct = optionIndex === question.correctIndex;
 
-    const row = upsertReview(current.id, correct);
+    const row = upsertReview(current.id, correct ? "good" : "again");
     const reachedMastered = correct && row.stage === 5;
-    awardXpForReview(correct, reachedMastered);
+    const gained = awardXpForReview(correct ? "good" : "again", reachedMastered);
 
-    if (correct) setXpGained((x) => x + 10 + (reachedMastered ? 50 : 0));
+    setXpGained((x) => x + gained);
     setFeedback(
       correct
         ? reachedMastered

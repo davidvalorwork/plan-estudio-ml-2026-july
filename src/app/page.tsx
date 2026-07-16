@@ -73,6 +73,9 @@ export default function Dashboard() {
                   <Link href={`/fase/${phase.id}`} className="text-emerald-400 hover:underline">
                     Ver fase
                   </Link>
+                  <Link href={`/flashcards/${phase.id}`} className="text-fuchsia-400 hover:underline">
+                    Tarjetas
+                  </Link>
                   <Link href={`/quiz/${phase.id}`} className="text-amber-400 hover:underline">
                     Quiz
                   </Link>

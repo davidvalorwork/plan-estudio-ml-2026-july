@@ -64,6 +64,9 @@ export default function FasePage({ params }: { params: Promise<{ id: string }> }
           </div>
         </div>
         <div className="flex gap-4 mt-2 text-sm">
+          <Link href={`/flashcards/${phase.id}`} className="text-fuchsia-400 hover:underline">
+            Ir a las tarjetas →
+          </Link>
           <Link href={`/quiz/${phase.id}`} className="text-amber-400 hover:underline">
             Ir al quiz →
           </Link>

@@ -21,6 +21,16 @@ export type ConceptProgressRow = {
   streak_ok: number;
 };
 
+// Autocalificación estilo Anki. "good" es el equivalente a "lo recordé" del quiz MCQ.
+export type Grade = "again" | "hard" | "good" | "easy";
+
+function nextStageForGrade(currentStage: number, grade: Grade): number {
+  if (grade === "again") return 1;
+  if (grade === "hard") return Math.max(currentStage, 1);
+  if (grade === "easy") return Math.min(currentStage + 2, 5);
+  return Math.min(currentStage + 1, 5); // "good"
+}
+
 type UserStatsRow = {
   xp: number;
   last_active_day: string | null;
@@ -65,21 +75,23 @@ export function getProgress(conceptId: string): ConceptProgressRow | undefined {
   return readProgress()[conceptId];
 }
 
-export function upsertReview(conceptId: string, remembered: boolean): ConceptProgressRow {
+export function upsertReview(conceptId: string, grade: Grade): ConceptProgressRow {
   const all = readProgress();
   const now = Date.now();
   const current = all[conceptId];
   const currentStage = current?.stage ?? 0;
 
-  const nextStage = remembered ? Math.min(currentStage + 1, 5) : 1;
+  const nextStage = nextStageForGrade(currentStage, grade);
   const offset = STAGE_OFFSETS_MS[Math.max(nextStage - 1, 0)] ?? 0;
+  const streakOk =
+    grade === "again" ? 0 : grade === "hard" ? current?.streak_ok ?? 0 : (current?.streak_ok ?? 0) + 1;
 
   const row: ConceptProgressRow = {
     concept_id: conceptId,
     stage: nextStage,
     next_due_at: now + offset,
     last_seen_at: now,
-    streak_ok: remembered ? (current?.streak_ok ?? 0) + 1 : 0,
+    streak_ok: streakOk,
   };
 
   all[conceptId] = row;
@@ -87,10 +99,10 @@ export function upsertReview(conceptId: string, remembered: boolean): ConceptPro
   return row;
 }
 
-const XP_PER_REVIEW = 10;
+const GRADE_XP: Record<Grade, number> = { again: 0, hard: 5, good: 10, easy: 15 };
 const XP_MASTERED_BONUS = 50;
 
-export function awardXpForReview(remembered: boolean, reachedMastered: boolean) {
+export function awardXpForReview(grade: Grade, reachedMastered: boolean): number {
   const stats = readStats();
   const today = new Date().toISOString().slice(0, 10);
 
@@ -100,9 +112,10 @@ export function awardXpForReview(remembered: boolean, reachedMastered: boolean) 
     streakDays = stats.last_active_day === yesterday ? streakDays + 1 : 1;
   }
 
-  const gained = (remembered ? XP_PER_REVIEW : 0) + (reachedMastered ? XP_MASTERED_BONUS : 0);
+  const gained = GRADE_XP[grade] + (reachedMastered ? XP_MASTERED_BONUS : 0);
 
   writeStats({ xp: stats.xp + gained, last_active_day: today, streak_days: streakDays });
+  return gained;
 }
 
 export function getUserStats() {
