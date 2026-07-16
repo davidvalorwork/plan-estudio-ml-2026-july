@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/lib/language";
 import { Header } from "@/components/Header";
+import { MemoryTipsButton } from "@/components/MemoryTipsButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
         <LanguageProvider>
           <Header />
           <main className="flex-1 px-6 py-8 max-w-5xl w-full mx-auto">{children}</main>
+          <MemoryTipsButton />
         </LanguageProvider>
       </body>
     </html>
