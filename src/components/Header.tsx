@@ -17,6 +17,12 @@ export function Header() {
         <Link href="/" className="hover:text-neutral-100 py-2">
           {t.dashboard}
         </Link>
+        <Link href="/guia" className="hover:text-neutral-100 py-2">
+          {t.guide}
+        </Link>
+        <Link href="/guion" className="hover:text-neutral-100 py-2">
+          {t.recitationNav}
+        </Link>
       </nav>
       <div className="ml-auto flex gap-1 rounded-full border border-neutral-700 p-1">
         <button

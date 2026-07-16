@@ -49,6 +49,14 @@ export const UI = {
     speakTooltip: "Escuchar pronunciación en inglés",
     flashcardsSubtitle: "Tarjetas",
     skip: "Saltar",
+    guide: "Guía",
+    recitationNav: "Guion",
+    recitationTitle: "Guion de recitación",
+    recitationIntro:
+      "Los 96 conceptos en el mismo orden de la cadena de personajes (fase 0 → fase 8). Por cada uno, primero intentá recitar de memoria la lección y el ejemplo usando solo el título y la escena del personaje como pista; recién después leé el resto para corregirte.",
+    recitationHint: "Pista",
+    recitationRelation: "Relación",
+    recitationQuestion: "Pregunta de autoevaluación",
   },
   en: {
     dashboard: "Dashboard",
@@ -98,6 +106,14 @@ export const UI = {
     speakTooltip: "Listen to English pronunciation",
     flashcardsSubtitle: "Flashcards",
     skip: "Skip",
+    guide: "Guide",
+    recitationNav: "Script",
+    recitationTitle: "Recitation script",
+    recitationIntro:
+      "All 96 concepts in the same order as the character chain (phase 0 → phase 8). For each one, first try to recite the lesson and example from memory using only the title and the character scene as a cue; only then read the rest to correct yourself.",
+    recitationHint: "Cue",
+    recitationRelation: "Relation",
+    recitationQuestion: "Self-check question",
   },
 } satisfies Record<Lang, Record<string, unknown>>;
 
